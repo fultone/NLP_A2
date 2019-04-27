@@ -59,14 +59,12 @@ print("\n5. PROBABILITIES (WHEN LABEL=1):", numpy_probs)
 ## label=1, and any estimated probability under .5 is a guess of
 ## 0. What is the accuracy of the model with respect to the labels?
 
-#accuracy = [1 for x in numpy_probs if x > 0.5]
-#accuracy = [0 for x in numpy_probs if x < 0.5]
-print("\n6. ACCURACY OF THE MODEL:",)
-rounded = np.round(numpy_probs)
+predicted = np.round(numpy_probs)
 #if 1 and true or if 0 and false ==> correct, else not correct
-
-print(labels)
-# how many times the thing I answered = labels
+arr = np.equal(labels, predicted)
+num_correct = np.count_nonzero(np.where(arr==True, 1, arr))
+accuracy = (num_correct) / len(predicted)
+print("\n6. ACCURACY OF THE MODEL:", accuracy)
 
 ## Here is how logistic regression is implemented in Keras:
 import keras

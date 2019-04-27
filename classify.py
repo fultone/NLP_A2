@@ -112,8 +112,8 @@ def get_nb_probs(train_docs, train_labels, smooth=1.0):
     neg_probs = defaultdict(int) # a dictionary mapping {word w: P(w | neg_class)}
 
     for word in vocab:
-        pos_probs[word] = (pos_counts[word] + smooth) / (n_pos + len(vocab))
-        neg_probs[word] = (neg_counts[word] + smooth) / (n_neg + len(vocab))
+        pos_probs[word] = (pos_counts[word] + smooth) / (n_pos + len(vocab)*smooth)
+        neg_probs[word] = (neg_counts[word] + smooth) / (n_neg + len(vocab)*smooth)
 
     return pos_probs, neg_probs, n_pos, n_neg
 
@@ -133,9 +133,11 @@ def classify_doc_naive_bayes(doc_in, pos_probs, neg_probs, n_pos, n_neg):
         if(neg_probs[word] != 0):
             log_prob_neg += np.log(neg_probs[word])
 
+    log_prob_pos += np.log(n_pos/(n_pos+n_neg))
+    log_prob_neg += np.log(n_neg/(n_pos+n_neg))
     if log_prob_pos < log_prob_neg:
         return 0
-    return 0
+    return 1
 
 
 ''' ************************** HOMEWORK #3 ************************** '''
@@ -196,37 +198,52 @@ def get_logistic_regression(train_docs, train_labels, min_vocab_occur=20):
 ''' ************************** HOMEWORK #4 ************************** '''
 def classify_doc_logistic_regression(doc_in, vocab_lr, model_lr):
     '''This function builds a term count vector (numpy array) from doc_in,
-    according to vocab_lr, which is a dictionary mapping words to
-    indices in the vocabulary. model_lr is the sklearn pipeline built
+    according to vocab_lr (logistic regression), which is a dictionary mapping
+    words to indices in the vocabulary. model_lr is the sklearn pipeline built
     in the get_logistic_regression function. Note that you can call
     model_lr.predict(x) to generate model predictions for vectors x.
     '''
-    for doc in doc_in:
-        print(model_lr.predict(doc))
-    return 0
+    # make the feature vector, then call model.predict on that feature vector
+    featureVector = np.zeros((1,len(vocab_lr)))
+    for word in doc_in:
+        index = vocab_lr[word]
+        featureVector[index] += 1
+
+    return model_lr.predict(featureVector)
 
 ''' ************************** HOMEWORK #5 ************************** '''
 def get_accuracy(true, predicted):
-    raise NotImplementedError('TODO')
+    arr = np.equal(true, predicted)
+    num_correct = np.count_nonzero(np.where(arr==True, 1, arr))
+    accuracy = (num_correct) / len(predicted)
+    return accuracy
 
-
+# true_pos = where (predicted = 1) and (true = 1)
+# false_pos = where (predicted = 1) and (true = 0)
 def get_precision(true, predicted):
-    raise NotImplementedError('TODO')
+    together = np.array([true, predicted])
+    true_pos = (np.sum(together, axis=0) == 2).sum())
+    false_pos = (np.subtract(true, predicted) == -1).sum()
+    return (true_pos) / (true_pos + false_pos)
 
-
+# true_pos = where (predicted = 1) and (true = 1)
+# false_neg = where (predicted = 0) and (true = 1)
 def get_recall(true, predicted):
-    raise NotImplementedError('TODO')
-
+    together = np.array([true, predicted])
+    true_pos = (np.sum(together, axis=0) == 2).sum())
+    false_neg = (np.subtract(predicted, true) == -1).sum()
+    recall = (true_pos) / (true_pos + false_neg)
+    return recall
 
 def get_f1(true, predicted):
-    raise NotImplementedError('TODO')
+    precision = get_precision(true, predicted)
+    recall = get_recall(true, predicted)
+    return (2 * precision * recall) / (precision + recall)
 
 
 def classify_doc_constant(doc_in):
     '''Constant prediction classifier'''
     return 0
-
-
 
 def get_metrics(true, predicted):
     accuracy = get_accuracy(true, predicted)
@@ -255,9 +272,9 @@ def main():
 
     vocab_lr, model_lr =  get_logistic_regression(train_docs, train_labels)
     print(model_lr)
-    '''
+
     ## Constant prediction
-    #constant_predictions = np.array([classify_doc_constant(v) for v in val_docs])
+    constant_predictions = np.array([classify_doc_constant(v) for v in val_docs])
 
     ## Hand-designed classifier prediction
     hand_predictions = np.array([classify_doc_hand_design(v, valid_words=[('good', 1), ('bad', -1), ('excellent', 1),('dissapointing', -1)])
@@ -279,7 +296,7 @@ def main():
                       for f in get_metrics(val_labels, nb_predictions)]))
     print(' & '.join(['{:.2f}'.format(100*f)
                       for f in get_metrics(val_labels, lr_predictions)]))
-    '''
+
 
 if __name__ == '__main__':
     main()
