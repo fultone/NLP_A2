@@ -204,8 +204,11 @@ def classify_doc_logistic_regression(doc_in, vocab_lr, model_lr):
     model_lr.predict(x) to generate model predictions for vectors x.
     '''
     # make the feature vector, then call model.predict on that feature vector
-    featureVector = np.zeros((1,len(vocab_lr)))
+    #featureVector = np.zeros((1,len(vocab_lr)))
+    featureVector = np.zeros(len(vocab_lr))
+    print("FEATURE VECTOR", featureVector, "LENGTH:", len(featureVector))
     for word in doc_in:
+        #print("WORD:", word, "Index:", vocab_lr[word], "Size:", len(vocab_lr))
         index = vocab_lr[word]
         featureVector[index] += 1
 
@@ -222,7 +225,7 @@ def get_accuracy(true, predicted):
 # false_pos = where (predicted = 1) and (true = 0)
 def get_precision(true, predicted):
     together = np.array([true, predicted])
-    true_pos = (np.sum(together, axis=0) == 2).sum())
+    true_pos = (np.sum(together, axis=0) == 2).sum()
     false_pos = (np.subtract(true, predicted) == -1).sum()
     return (true_pos) / (true_pos + false_pos)
 
@@ -230,7 +233,7 @@ def get_precision(true, predicted):
 # false_neg = where (predicted = 0) and (true = 1)
 def get_recall(true, predicted):
     together = np.array([true, predicted])
-    true_pos = (np.sum(together, axis=0) == 2).sum())
+    true_pos = (np.sum(together, axis=0) == 2).sum()
     false_neg = (np.subtract(predicted, true) == -1).sum()
     recall = (true_pos) / (true_pos + false_neg)
     return recall
@@ -271,7 +274,6 @@ def main():
 
 
     vocab_lr, model_lr =  get_logistic_regression(train_docs, train_labels)
-    print(model_lr)
 
     ## Constant prediction
     constant_predictions = np.array([classify_doc_constant(v) for v in val_docs])
